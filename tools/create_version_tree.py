@@ -14,7 +14,7 @@ def _serialize_sets(obj):
 
 def create_version_tree(version, path):
     dependency_tree = _read_deps(path)
-    trees = Path("trees")
+    trees = Path("../trees")
     trees.mkdir(exist_ok=True)
     with open(Path(trees, version + ".json"), "wt") as fout:
         fout.write(json.dumps(dependency_tree, indent=4, default=_serialize_sets))
