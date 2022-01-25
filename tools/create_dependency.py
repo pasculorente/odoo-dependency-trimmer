@@ -1,6 +1,7 @@
 import argparse
 import ast
 import os
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -55,15 +56,26 @@ def _read_manifest_deps(manifest_file):
         return manifest.get("depends", [])
 
 
-def _simplify_dependencies(paths, modules, show_tree=False):
-    # Read all paths to generate the big dependency tree
-    dependency_tree = dict()
-    for p in paths:
-        dependency_tree.update(_read_deps(p))
+def _simplify_dependencies(dependency_tree, modules, show_tree=False):
     pruned = _minimum_dep_tree(dependency_tree, modules)
     print(",".join(pruned))
     if show_tree:
         _min_spanning_tree(dependency_tree, modules)
+
+
+def _read_dependency_tree(odoo_version):
+    import requests
+    import json
+    file = requests.get(f"https://github.com/pasculorente/odoo-dependency-trimmer/blob/main/trees/{odoo_version}.json")
+    data = json.loads(file.content)
+    return data
+
+
+def _read_dep_tree(paths):
+    dependency_tree = dict()
+    for p in paths:
+        dependency_tree.update(_read_deps(p))
+    return dependency_tree
 
 
 def _min_path(tree, start, end, current_path=None):
@@ -105,26 +117,43 @@ def _min_spanning_tree(dep_tree, modules):
         _print_tree(rtn, root)
 
 
-if __name__ == '__main__':
+def main():
+    print(sys.argv)
     parser = argparse.ArgumentParser("trim_dependencies", description="Prune dependencies for Odoo manifest files")
-    parser.add_argument("-p", "--path", dest="paths", action="append", required=True,
-                        help="Path to modules parent directory")
+    parser.add_argument("-p", "--path", dest="paths", action="append",  help="Path to modules parent directory")
+    parser.add_argument("-w", "--odoo-version", dest="odoo_version", help="Odoo version (if no path is available)")
     parser.add_argument("-m", "--manifest", dest="manifest", help="path to your manifest file")
     parser.add_argument("-d", "--dependencies", dest="dependencies",
                         help="comma separated list of dependencies (if no manifest selected)")
     parser.add_argument("-t", "--show-tree", dest="show_tree", help="Show the related dependency tree",
                         action='store_true')
+    parser.add_argument("manifest", dest="arg_manifest")
     arguments = parser.parse_args()
-    paths = set()
-    for x in arguments.paths:
-        paths.update(x.split(","))
+    # Generate all Odoo tree
+    if arguments.paths:
+        paths = set()
+        for x in arguments.paths:
+            paths.update(x.split(","))
+        dependency_tree = _read_dep_tree(paths)
+    elif arguments.odoo_version:
+        dependency_tree = _read_dependency_tree(arguments.odoo_version)
+    else:
+        raise ValueError("One of -p or -w must be present")
+
     if arguments.dependencies and arguments.manifest:
         raise ValueError("manifest and dependencies are exclusive")
-    deps = None
     if arguments.dependencies:
         deps = {x.strip() for x in arguments.dependencies.split(",")}
     elif arguments.manifest:
         deps = _read_manifest_deps(arguments.manifest)
+    elif arguments.arg_manifest:
+        deps = _read_manifest_deps(arguments.manifest)
     else:
         raise ValueError("Missing one of [manifest,dependencies] argument")
-    _simplify_dependencies(paths, deps, arguments.show_tree)
+
+    # Read all paths to generate the big dependency tree
+    _simplify_dependencies(dependency_tree, deps, arguments.show_tree)
+
+
+if __name__ == '__main__':
+    main()

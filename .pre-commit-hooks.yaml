@@ -1,0 +1,6 @@
+- id: odoo-dependency-trimmer
+  name: Trim manifest dependencies
+  language: python
+  files: __manifest__\.py
+  entry: odoo-dependency-trimmer
+  args: ["-w", "14.0"]
