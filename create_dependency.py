@@ -55,7 +55,7 @@ def _read_manifest_deps(manifest_file):
         return manifest.get("depends", [])
 
 
-def simplify_dependencies(paths, modules, show_tree=False):
+def _simplify_dependencies(paths, modules, show_tree=False):
     # Read all paths to generate the big dependency tree
     dependency_tree = dict()
     for p in paths:
@@ -80,10 +80,10 @@ def _min_path(tree, start, end, current_path=None):
     return None
 
 
-def print_tree(tree, root, level=0):
+def _print_tree(tree, root, level=0):
     print(f"{level * '    '}- {root}")
     for subelement in tree[root]:
-        print_tree(tree, subelement, level + 1)
+        _print_tree(tree, subelement, level + 1)
 
 
 def _min_spanning_tree(dep_tree, modules):
@@ -91,10 +91,10 @@ def _min_spanning_tree(dep_tree, modules):
     all_paths = []
     for i in range(len(ms)):
         for j in range(len(ms)):
-            # if i != j:
-            p = _min_path(dep_tree, ms[i], ms[j])
-            if p:
-                all_paths.append(p)
+            if i != j:
+                p = _min_path(dep_tree, ms[i], ms[j])
+                if p:
+                    all_paths.append(p)
     rtn = defaultdict(set)
     rtn.update({x: set() for x in modules})
     for p in all_paths:
@@ -102,7 +102,7 @@ def _min_spanning_tree(dep_tree, modules):
             rtn[p[i]].add(p[i + 1])
     roots = {x for x in rtn if not any(x in values for values in rtn.values())}
     for root in roots:
-        print_tree(rtn, root)
+        _print_tree(rtn, root)
 
 
 if __name__ == '__main__':
@@ -127,5 +127,4 @@ if __name__ == '__main__':
         deps = _read_manifest_deps(arguments.manifest)
     else:
         raise ValueError("Missing one of [manifest,dependencies] argument")
-    simplify_dependencies(paths, deps, arguments.show_tree)
-
+    _simplify_dependencies(paths, deps, arguments.show_tree)
