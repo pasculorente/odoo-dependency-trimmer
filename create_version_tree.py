@@ -1,4 +1,5 @@
 import json
+import os.path
 from pathlib import Path
 
 from create_dependency import _read_deps
@@ -20,5 +21,5 @@ def create_version_tree(version, path):
 
 
 if __name__ == '__main__':
-    create_version_tree("14.0", "~/odoo/versions/14.0")
-    create_version_tree("15.0", "~/odoo/versions/15.0")
+    create_version_tree("14.0", os.path.expanduser("~/odoo/versions/14.0"))
+    create_version_tree("15.0", os.path.expanduser("~/odoo/versions/15.0"))
