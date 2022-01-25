@@ -68,7 +68,7 @@ def _simplify_dependencies(dependency_tree, modules, show_tree=False):
     pruned = _minimum_dep_tree(dependency_tree, modules)
     if show_tree:
         _min_spanning_tree(dependency_tree, modules)
-    return pruned
+    return pruned, set(pruned) != set(modules)
 
 
 def _read_dependency_tree(odoo_version):
@@ -158,9 +158,8 @@ def main():
     else:
         raise ValueError("Missing one of [manifest,dependencies] argument")
     # Read all paths to generate the big dependency tree
-    deps = _simplify_dependencies(dependency_tree, deps, arguments.show_tree)
-    print(",".join(deps))
-    if arguments.inplace:
+    deps, changed = _simplify_dependencies(dependency_tree, deps, arguments.show_tree)
+    if changed and arguments.inplace:
         mfile = arguments.manifest or arguments.arg_manifest
         dep_string = _create_deps_string(deps)
         with open(mfile) as file:
@@ -169,6 +168,8 @@ def main():
             data = re.sub("[\"|']depends[\"|']\\s*:\\s*\\[[^]]*],", dep_string, data)
         with open(mfile, "wt") as fout:
             fout.write(data)
+    else:
+        print(",".join(deps))
 
 
 def _create_deps_string(deps, spacing=4, quote='"'):
