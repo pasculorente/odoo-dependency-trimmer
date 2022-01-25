@@ -4,6 +4,7 @@ setuptools.setup(
     name='odoo-dependency-trimmer',
     author="Pascual Lorente",
     author_email="palo@odoo.com",
+    version="1.0.0",
     description='Small utility to reduce the number of manifest depends',
     license='AGPL3',
     packages=['tools'],
