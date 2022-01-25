@@ -2,7 +2,7 @@ import json
 import os.path
 from pathlib import Path
 
-from create_dependency import _read_deps
+from auto_clean_dependencies import _read_deps
 
 
 def _serialize_sets(obj):

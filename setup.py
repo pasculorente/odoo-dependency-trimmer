@@ -15,7 +15,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            "odoo-dependency-trimmer=tools.create_dependency:main",
+            "odoo-dependency-trimmer=tools.auto_clean_dependencies:main",
         ],
     },
 )
